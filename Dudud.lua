@@ -1472,7 +1472,15 @@ Tab2:Button({
 local Tab3 = Window:Tab({Title = "ออโต้ฟาร์ม"})
 Tab3:Section({Title = "Auto Kick & Train"})
 
-local Net = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Network")
+-- แก้ไขให้โหลด Net แบบปลอดภัย ไม่ค้างในแมพอื่น
+local function GetNet()
+    local rs = game:GetService("ReplicatedStorage")
+    if rs:FindFirstChild("Shared") and rs.Shared:FindFirstChild("Packages") and rs.Shared.Packages:FindFirstChild("Network") then
+        return rs.Shared.Packages.Network
+    end
+    return nil
+end
+
 local PlayerGui = localPlayer:WaitForChild("PlayerGui")
 local kickValues = { ["Perfect"] = 1 }
 local currentKickMode = "Perfect"
@@ -1495,8 +1503,9 @@ Tab3:Toggle({
                         local char = localPlayer.Character
                         local hrp = char and char:FindFirstChild("HumanoidRootPart")
                         local hum = char and char:FindFirstChild("Humanoid")
+                        local Net = GetNet()
                         
-                        if hrp and hum then
+                        if hrp and hum and Net then
                             hrp.Velocity = Vector3.new(0,0,0)
                             hrp.CFrame = workspace.Areas.KickReady.CFrame + Vector3.new(0, 5, 0)
                             task.wait(0.5)
@@ -1693,4 +1702,4 @@ Window:Notify({
 -- [ บังคับเปิดใช้งานตั้งแต่รันสคริปต์ ] --
 flyToggle.Set(true)
 turboToggle.Set(true)
-autoFlyToggle.Set(true) -- เปิด Auto Fly อัตโนมัติ
+autoFlyToggle.Set(true)
