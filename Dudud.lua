@@ -1552,7 +1552,7 @@ Tab3:Toggle({
     end
 })
 
--- [ 2. ฟังก์ชัน Turbo Auto Click ] --
+-- [ 2. ฟังก์ชัน Turbo Auto Click (แบบจำปุ่ม ลดอาการแลค) ] --
 local autoClickEnabled = false
 local targetImageID = "77461897800522" 
 
@@ -1563,23 +1563,43 @@ local turboToggle = Tab3:Toggle({
         autoClickEnabled = v
         if autoClickEnabled then
             task.spawn(function()
+                local cachedBtn = nil
                 while autoClickEnabled do
-                    task.wait() 
-                    pcall(function()
-                        for _, element in pairs(localPlayer.PlayerGui:GetDescendants()) do
-                            if (element:IsA("ImageButton") or element:IsA("ImageLabel")) and element.Visible then
-                                if element.Image and string.find(tostring(element.Image), targetImageID) then
-                                    local btn = element
-                                    if not btn:IsA("GuiButton") and btn.Parent and btn.Parent:IsA("GuiButton") then btn = btn.Parent end
-                                    if btn:IsA("GuiButton") then
-                                        if firesignal then firesignal(btn.MouseButton1Click) firesignal(btn.Activated) firesignal(btn.MouseButton1Down)
-                                        elseif getconnections then for _, conn in pairs(getconnections(btn.MouseButton1Click)) do conn:Fire() end for _, conn in pairs(getconnections(btn.Activated)) do conn:Fire() end end
-                                        task.wait(0.1) 
+                    local isValid = false
+                    if cachedBtn then
+                        pcall(function() isValid = cachedBtn.Visible and cachedBtn.Parent ~= nil end)
+                    end
+                    
+                    if not isValid then
+                        cachedBtn = nil
+                        pcall(function()
+                            for _, element in ipairs(localPlayer.PlayerGui:GetDescendants()) do
+                                if (element:IsA("ImageButton") or element:IsA("ImageLabel")) and element.Visible then
+                                    if element.Image and string.find(tostring(element.Image), targetImageID) then
+                                        local btn = element
+                                        if not btn:IsA("GuiButton") and btn.Parent and btn.Parent:IsA("GuiButton") then btn = btn.Parent end
+                                        if btn:IsA("GuiButton") then 
+                                            cachedBtn = btn 
+                                            break 
+                                        end
                                     end
                                 end
                             end
-                        end
-                    end)
+                        end)
+                        task.wait(0.5) -- หน่วงเวลาตอนค้นหาปุ่ม จะได้ไม่แลค
+                    else
+                        pcall(function()
+                            if firesignal then 
+                                firesignal(cachedBtn.MouseButton1Click) 
+                                firesignal(cachedBtn.Activated) 
+                                firesignal(cachedBtn.MouseButton1Down)
+                            elseif getconnections then 
+                                for _, conn in pairs(getconnections(cachedBtn.MouseButton1Click)) do conn:Fire() end 
+                                for _, conn in pairs(getconnections(cachedBtn.Activated)) do conn:Fire() end 
+                            end
+                        end)
+                        task.wait() -- กดรัวๆ ตอนเจอปุ่ม
+                    end
                 end
             end)
         end
